@@ -2,11 +2,15 @@ package web
 
 import (
 	"fmt"
+	"github.com/mgutz/ansi"
+	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"log"
 	"os"
 	"runtime/debug"
+	"strings"
 	"testing"
+	"time"
 
 	_ "github.com/GoAdminGroup/go-admin/adapter/gin"
 	_ "github.com/GoAdminGroup/go-admin/modules/db/drivers/mysql"
@@ -40,7 +44,10 @@ var (
 		"--no-zygote",
 		"--allow-running-insecure-content",
 	}
-	quit    = make(chan uint8)
+	quit = make(chan uint8)
+)
+
+const (
 	baseURL = "http://localhost:9033"
 	port    = ":9033"
 )
@@ -98,19 +105,36 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		panic("failed to start driver, error: " + err.Error())
 	}
-	defer func() {
-		_ = driver.Stop()
-	}()
 
 	page, err = driver.NewPage()
 	if err != nil {
 		panic("failed to open page, error: " + err.Error())
 	}
-	defer func() {
-		_ = page.Destroy()
-	}()
+
+	fmt.Println()
+	fmt.Println("============================================")
+	printlnWithColor("User Acceptance Testing", "blue")
+	fmt.Println("============================================")
+	fmt.Println()
 
 	test := m.Run()
+
+	sleep(2)
+
+	err = page.CloseWindow()
+	if err != nil {
+		fmt.Println("failed to close page, error: ", err)
+	}
+
+	err = page.Destroy()
+	if err != nil {
+		fmt.Println("failed to destroy page, error: ", err)
+	}
+
+	err = driver.Stop()
+	if err != nil {
+		fmt.Println("failed to stop driver, error: ", err)
+	}
 
 	quit <- 0
 	os.Exit(test)
@@ -130,3 +154,54 @@ func StopDriverOnPanic(t *testing.T) {
 func url(suffix string) string {
 	return baseURL + suffix
 }
+
+func sleep(t int) {
+	time.Sleep(time.Duration(t) * time.Second)
+}
+
+func contain(t *testing.T, s string) {
+	content, err := page.HTML()
+	assert.Equal(t, err, nil)
+	assert.Equal(t, strings.Contains(content, s), true)
+}
+
+func noContain(t *testing.T, s string) {
+	content, err := page.HTML()
+	assert.Equal(t, err, nil)
+	assert.Equal(t, strings.Contains(content, s), false)
+}
+
+func css(t *testing.T, s *agouti.Selection, css, res string) {
+	style, err := s.CSS(css)
+	assert.Equal(t, err, nil)
+	assert.Equal(t, style, res)
+}
+
+func text(t *testing.T, s *agouti.Selection, text string) {
+	mli1, err := s.Text()
+	assert.Equal(t, err, nil)
+	assert.Equal(t, mli1, text)
+}
+
+func click(t *testing.T, xpath string) {
+	assert.Equal(t, page.FindByXPath(xpath).Click(), nil)
+}
+
+func attr(t *testing.T, s *agouti.Selection, attr, res string) {
+	style, err := s.Attribute(attr)
+	assert.Equal(t, err, nil)
+	assert.Equal(t, style, res)
+}
+
+func printlnWithColor(msg string, color string) {
+	fmt.Println(ansi.Color(msg, color))
+}
+
+func fill(t *testing.T, xpath, content string) {
+	assert.Equal(t, page.FindByXPath(xpath).Fill(content), nil)
+}
+
+const (
+	colorBlue  = "blue"
+	colorGreen = "green"
+)
