@@ -31,7 +31,11 @@ func OkWithData(ctx *context.Context, data map[string]interface{}) {
 }
 
 func BadRequest(ctx *context.Context, msg string) {
-	user := ctx.UserValue["user"].(models.UserModel)
+	var user = models.UserModel{}
+	var ok bool
+	if user, ok = ctx.UserValue["user"].(models.UserModel);!ok {
+		user.Id = -1
+	}
 	ctx.JSON(http.StatusBadRequest, map[string]interface{}{
 		"code": 400,
 		"msg":  language.GetUser(msg, user.Id),
@@ -57,7 +61,11 @@ func Alert(ctx *context.Context, config config.Config, desc, title, msg string, 
 }
 
 func Error(ctx *context.Context, msg string) {
-	user := ctx.UserValue["user"].(models.UserModel)
+	var user = models.UserModel{}
+	var ok bool
+	if user, ok = ctx.UserValue["user"].(models.UserModel);!ok {
+		user.Id = -1
+	}
 	ctx.JSON(http.StatusInternalServerError, map[string]interface{}{
 		"code": 500,
 		"msg":  language.GetUser(msg, user.Id),
