@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"github.com/GoAdminGroup/go-admin/context"
 	"github.com/GoAdminGroup/go-admin/modules/auth"
+	"github.com/GoAdminGroup/go-admin/modules/config"
 	"github.com/GoAdminGroup/go-admin/modules/file"
 	"github.com/GoAdminGroup/go-admin/modules/menu"
+	"github.com/GoAdminGroup/go-admin/plugins/admin/models"
 	"github.com/GoAdminGroup/go-admin/plugins/admin/modules"
 	"github.com/GoAdminGroup/go-admin/plugins/admin/modules/constant"
 	form2 "github.com/GoAdminGroup/go-admin/plugins/admin/modules/form"
@@ -143,4 +145,16 @@ func (h *Handler) EditForm(ctx *context.Context) {
 
 	ctx.HTML(http.StatusOK, buf.String())
 	ctx.AddHeader(constant.PjaxUrlHeader, param.PreviousPath)
+}
+
+func (h *Handler) SetLanguage(ctx *context.Context) {
+	if len(ctx.PostForm()["language"]) == 0 {
+		return
+	}
+	if user, ok := ctx.UserValue["user"].(models.UserModel); ok {
+		config.SetUserConfig(config.UserConfig{
+			UserId:   user.Id,
+			Language: ctx.PostForm()["language"][0],
+		})
+	}
 }
