@@ -88,6 +88,16 @@ func (h *Handler) EditForm(ctx *context.Context) {
 
 	param := guard.GetEditFormParam(ctx)
 
+	language := ctx.FormValue("language")
+	if language != "" {
+		if user, ok := ctx.UserValue["user"].(models.UserModel);ok {
+			config.SetUserConfig(config.UserConfig{
+				UserId:   user.Id,
+				Language: language,
+			})
+		}
+	}
+
 	if param.HasAlert() {
 		h.showForm(ctx, param.Alert, param.Prefix, param.Id, param.Param.GetRouteParamStr(), true)
 		return
@@ -145,16 +155,4 @@ func (h *Handler) EditForm(ctx *context.Context) {
 
 	ctx.HTML(http.StatusOK, buf.String())
 	ctx.AddHeader(constant.PjaxUrlHeader, param.PreviousPath)
-}
-
-func (h *Handler) SetLanguage(ctx *context.Context) {
-	if len(ctx.PostForm()["language"]) == 0 {
-		return
-	}
-	if user, ok := ctx.UserValue["user"].(models.UserModel); ok {
-		config.SetUserConfig(config.UserConfig{
-			UserId:   user.Id,
-			Language: ctx.PostForm()["language"][0],
-		})
-	}
 }

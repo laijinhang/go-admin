@@ -55,9 +55,6 @@ func (admin *Admin) initRouter(prefix string) *Admin {
 
 	authRoute.POST("/update/:__prefix", admin.guardian.Update, admin.handler.Update).Name("update")
 
-	// set user language
-	authRoute.POST("/set/language", admin.handler.SetLanguage)
-
 	admin.app = app
 	return admin
 }
